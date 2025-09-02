@@ -15,7 +15,7 @@ class Tester(val api: ApiService) {
                     Log.i(TAG, "devices: ${device.deviceName}")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "devices: $e", )
+                Log.e(TAG, "devices: $e" )
             }
         }
     }
