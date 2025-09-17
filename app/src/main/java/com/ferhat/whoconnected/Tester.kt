@@ -18,6 +18,7 @@ class Tester(val api: ApiService) {
                 Log.e(TAG, "devices: $e" )
             }
         }
+
     }
 
 }

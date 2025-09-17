@@ -18,35 +18,44 @@ import kotlinx.coroutines.launch
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.Retrofit
 import okhttp3.OkHttpClient
+import androidx.activity.viewModels
 
+class MyViewModel : ViewModel() {
+    val counter = MutableLiveData<Int>()
+}
 class MainActivity : ComponentActivity() {
+    private val viewModel: MyViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        viewModel.counter.observe(this) { value ->
 
-        //retrofit instance
-        var moshi = Moshi.Builder().build()
-        var retrofit = Retrofit.Builder()
-            .baseUrl("https://ferhatsanli.duckdns.org:3000/whoconnected")
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .client(OkHttpClient.Builder().build())
-            .build()
-        var apiService = retrofit.create(ApiService::class.java)
+        }
+//        //retrofit instance
+//        var moshi = Moshi.Builder().build()
+//        var retrofit = Retrofit.Builder()
+//            .baseUrl("https://ferhatsanli.duckdns.org:3000/whoconnected")
+//            .addConverterFactory(MoshiConverterFactory.create(moshi))
+//            .client(OkHttpClient.Builder().build())
+//            .build()
+//        var apiService = retrofit.create(ApiService::class.java)
         setContent {
             WhoConnectedTheme {
-                MainScreen(apiService)
+//                MainScreen(apiService)
+                Greeting("hello world")
             }
         }
     }
 }
-@Composable
-fun MainScreen(api: ApiService) {
-    var devices by remember { mutableStateOf<List<Device>>(emptyList()) }
-    Button(onClick = {
-        lifecycleScope.launch { devices = api.getDevices() }
-    }) { Text("Refresh Data") }
-    Views().DeviceList(devices)
-}
+//@Composable
+//fun MainScreen(api: ApiService) {
+//    var devices by remember { mutableStateOf<List<Device>>(emptyList()) }
+//    Button(onClick = {
+//        lifecycleScope.launch { devices = api.getDevices() }
+//    }) { Text("Refresh Data") }
+//    Views().DeviceList(devices)
+//}
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
