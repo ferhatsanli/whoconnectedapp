@@ -30,15 +30,27 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import okhttp3.logging.HttpLoggingInterceptor
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBar
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             WhoConnectedTheme {
-                ButtonAndList()
+                val snackbarHostState = remember { SnackbarHostState() }
+                Scaffold(
+                    topBar = { TopAppBar(title = { Text("Who Connected") }) },
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+                ) { innerPadding ->
+                    ButtonAndList(
+                        contentPadding = innerPadding,
+                        snackbarHostState = snackbarHostState
+                    )
+                }
             }
         }
     }
@@ -98,9 +110,11 @@ suspend fun gatherData(): List<Device> {
 }
 
 @Composable
-fun ButtonAndList() {
+fun ButtonAndList(
+    contentPadding: PaddingValues,
+    snackbarHostState: SnackbarHostState
+) {
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
     var data by remember { mutableStateOf<List<Device>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
@@ -126,64 +140,80 @@ fun ButtonAndList() {
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { paddingValues ->
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
-        ) {
-            // button at top center
-            Button(onClick = {
-                scope.launch {
-                    isLoading = true
-                    errorMsg = null
-                    try {
-                        data = gatherData()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "ButtonAndList: load error", e)
-                        errorMsg = e.message
-                    } finally {
-                        isLoading = false
-                    }
-                }
-            }, modifier = Modifier.padding(top = 16.dp).size(120.dp, 48.dp)) {
-                Text("Refresh")
-            }
-
-            // list area: takes remaining space
-            Box(modifier = Modifier.weight(1f)) {
-                if (isLoading) {
-                    Text("Loading...")
-                } else if (errorMsg != null) {
-                    Text("Error: $errorMsg")
-                } else {
-                    DeviceList(data, onDeviceClick = onDeviceClick)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize().padding(contentPadding)
+    ) {
+        // button at top center
+        Button(onClick = {
+            scope.launch {
+                isLoading = true
+                errorMsg = null
+                try {
+                    data = gatherData()
+                } catch (e: Exception) {
+                    Log.e(TAG, "ButtonAndList: load error", e)
+                    errorMsg = e.message
+                } finally {
+                    isLoading = false
                 }
             }
-
+        }, modifier = Modifier.padding(top = 16.dp).size(120.dp, 48.dp)) {
+            Text("Refresh")
         }
+
+        // list area: takes remaining space
+        Box(modifier = Modifier.weight(1f)) {
+            if (isLoading) {
+                Text("Loading...")
+            } else if (errorMsg != null) {
+                Text("Error: $errorMsg")
+            } else {
+                DeviceList(data, onDeviceClick = onDeviceClick)
+            }
+        }
+
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
 fun ButtonAndListPreview() {
     WhoConnectedTheme {
-        val sampleCells = listOf(
-            Device(
-                "2025-09-02 23:07:05",
-                "E2:41:9A:CA:C0:18",
-                "192.168.178.37",
-                "Ferhat-S23"
-            ),
-            Device(
-                "2025-09-02 23:07:05",
-                "B0:E4:D5:BF:65:BE",
-                "192.168.178.39",
-                "Living Room TV"
-            )
+        val snackbarHostState = remember { SnackbarHostState() }
+        ButtonAndList(
+            contentPadding = PaddingValues(0.dp),
+            snackbarHostState = snackbarHostState
         )
-        DeviceList(sampleCells, onDeviceClick = { })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, showSystemUi = true, device = "id:Samsung S25")
+@Composable
+fun ButtonAndListPreview() {
+    val snackbarHostState = remember { SnackbarHostState() }
+    Scaffold(
+        topBar = { TopAppBar(title = {Text("Who Connected")})},
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
+        WhoConnectedTheme {
+            val sampleCells = listOf(
+                Device(
+                    "2025-09-02 23:07:05",
+                    "E2:41:9A:CA:C0:18",
+                    "192.168.178.37",
+                    "Ferhat-S23"
+                ),
+                Device(
+                    "2025-09-02 23:07:05",
+                    "B0:E4:D5:BF:65:BE",
+                    "192.168.178.39",
+                    "Living Room TV"
+                )
+            )
+            DeviceList(
+                sampleCells, onDeviceClick = { })
+        }
     }
 }
